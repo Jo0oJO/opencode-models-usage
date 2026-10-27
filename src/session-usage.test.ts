@@ -1,7 +1,12 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 
-import { getSessionUsage, getTokenTotal, type SessionMessageLike } from "./session-usage"
+import {
+  fromSessionMessage,
+  getSessionUsage,
+  getTokenTotal,
+  type SessionMessageLike,
+} from "./session-usage"
 
 test("empty session returns no models", () => {
   assert.deepEqual(getSessionUsage([]), {
@@ -247,6 +252,94 @@ test("provider catalog also works when providers are stored as an array", () => 
       },
     ],
   })
+})
+
+test("v2 assistant and compaction messages keep the same totals", () => {
+  const usage = getSessionUsage([
+    fromSessionMessage({
+      id: "msg_1",
+      type: "assistant",
+      model: { id: "gpt-4.1", providerID: "openai" },
+      cost: 0.25,
+      tokens: {
+        input: 11,
+        output: 7,
+        reasoning: 5,
+        cache: { read: 3, write: 2 },
+      },
+      time: { created: 1000, completed: 2000 },
+      finish: "stop",
+    }),
+    fromSessionMessage({
+      id: "user_1",
+      type: "user",
+      text: "hi",
+      time: { created: 500 },
+    }),
+    fromSessionMessage({
+      id: "cmp_1",
+      type: "compaction",
+      status: "completed",
+      model: { id: "gpt-4.1", providerID: "openai" },
+      cost: 0.125,
+      tokens: {
+        input: 4,
+        output: 1,
+        reasoning: 0,
+        cache: { read: 2, write: 0 },
+      },
+      time: { created: 3000, completed: 4000 },
+    }),
+  ])
+
+  assert.deepEqual(usage, {
+    models: [
+      {
+        label: "openai/gpt-4.1",
+        contextTokens: 7,
+        sessionTokens: 35,
+        sessionCachedTokens: 5,
+        cost: 0.375,
+        tps: 0,
+        isLiveTps: false,
+      },
+    ],
+  })
+})
+
+test("v1 message fields still map through", () => {
+  assert.deepEqual(
+    fromSessionMessage({
+      id: "a",
+      role: "assistant",
+      providerID: "openai",
+      modelID: "gpt-4.1",
+      cost: 1,
+      tokens: {
+        input: 1,
+        output: 2,
+        cache: { read: 3, write: 4 },
+      },
+      time: { created: 5, completed: 6 },
+      finish: "stop",
+    }),
+    {
+      id: "a",
+      role: "assistant",
+      modelID: "gpt-4.1",
+      providerID: "openai",
+      tokens: {
+        input: 1,
+        output: 2,
+        reasoning: undefined,
+        cache: { read: 3, write: 4 },
+      },
+      cost: 1,
+      summary: undefined,
+      time: { created: 5, completed: 6 },
+      finish: "stop",
+    },
+  )
 })
 
 test("token helper tolerates missing counters", () => {

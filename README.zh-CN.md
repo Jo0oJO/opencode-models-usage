@@ -67,41 +67,43 @@
 
 ## 运行要求
 
-- OpenCode `>= 1.4.3`
+- OpenCode `>= 2.0.0`
+
+本包使用 OpenCode V2 的 TUI 插件 API（`@opencode/plugin`）。V1 的 `tui.json` 里 `plugin` / `plugin_enabled` 不会加载这个版本。
 
 ## 安装方式
 
-### 方式一：手动修改全局 TUI 配置（推荐第一次使用）
+这是一个仅 TUI 的插件。把它写进全局 CLI 配置后，即使终端连的是远程服务器，侧边栏也会继续生效。
 
-打开或新建全局配置文件：
+打开或新建：
 
 ```text
-~/.config/opencode/tui.json
+~/.config/opencode/cli.json
 ```
 
-添加以下内容：
+如果设置了 `$XDG_CONFIG_HOME`，请改用 `$XDG_CONFIG_HOME/opencode/cli.json`。
 
 ```json
 {
-  "$schema": "https://opencode.ai/tui.json",
-  "plugin": [
-    "opencode-models-usage-plugin/tui"
-  ],
-  "plugin_enabled": {
-    "session-model-usage": true
-  }
+  "$schema": "https://opencode.ai/v2/cli.json",
+  "plugins": [
+    "opencode-models-usage-plugin"
+  ]
 }
 ```
 
-保存后重启 OpenCode，插件会自动通过 npm 安装。
+保存后，OpenCode 会从 npm 安装该包，并加载 `./tui` 入口（`Plugin.define`，id 为 `session-model-usage`）。如果侧边栏没有马上出现，重启一次终端客户端。
 
-### 方式二：CLI 一键安装（最便捷）
+不想删包、只想关掉面板时，在同一个数组里加上带 `-` 前缀的插件 id：
 
-```bash
-opencode plugin opencode-models-usage-plugin --global
+```json
+{
+  "plugins": [
+    "opencode-models-usage-plugin",
+    "-session-model-usage"
+  ]
+}
 ```
-
-这条命令会自动安装插件，并更新全局配置。
 
 ## 技术说明
 
@@ -114,7 +116,7 @@ opencode plugin opencode-models-usage-plugin --global
 ## 包信息
 
 - npm：`opencode-models-usage-plugin`
-- 当前版本：`0.1.0`
+- 当前版本：`2.0.0`
 
 ## License
 

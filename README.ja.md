@@ -57,41 +57,43 @@ OpenCode のサイドバーで、現在のセッションツリー（再帰的�
 
 ## 動作要件
 
-- OpenCode `>= 1.4.3`
+- OpenCode `>= 2.0.0`
+
+このパッケージは OpenCode V2 の TUI プラグイン API（`@opencode/plugin`）向けです。V1 の `tui.json` にある `plugin` / `plugin_enabled` では読み込まれません。
 
 ## インストール
 
-### 方法 1: グローバル TUI 設定を手動で更新する（初回におすすめ）
+TUI 専用パッケージです。グローバルな CLI 設定に追加すると、ターミナルがリモートサーバーへ接続していてもサイドバーは有効なままです。
 
-以下のグローバル設定ファイルを開くか、新規作成します。
+次のファイルを開くか、新規作成します。
 
 ```text
-~/.config/opencode/tui.json
+~/.config/opencode/cli.json
 ```
 
-次の内容を追加してください。
+`$XDG_CONFIG_HOME` が設定されている場合は `$XDG_CONFIG_HOME/opencode/cli.json` を使います。
 
 ```json
 {
-  "$schema": "https://opencode.ai/tui.json",
-  "plugin": [
-    "opencode-models-usage-plugin/tui"
-  ],
-  "plugin_enabled": {
-    "session-model-usage": true
-  }
+  "$schema": "https://opencode.ai/v2/cli.json",
+  "plugins": [
+    "opencode-models-usage-plugin"
+  ]
 }
 ```
 
-保存して OpenCode を再起動すると、npm 経由で自動インストールされます。
+保存すると、OpenCode が npm からパッケージを入れ、`./tui` エントリ（`Plugin.define`、id は `session-model-usage`）を読み込みます。サイドバーがすぐ出ないときはターミナルクライアントを再起動してください。
 
-### 方法 2: CLI でワンコマンドインストール
+パッケージは残したままパネルだけ止めたい場合は、同じ配列にプラグイン id を `-` 付きで追加します。
 
-```bash
-opencode plugin opencode-models-usage-plugin --global
+```json
+{
+  "plugins": [
+    "opencode-models-usage-plugin",
+    "-session-model-usage"
+  ]
+}
 ```
-
-このコマンドでプラグインのインストールとグローバル設定の更新を自動で行えます。
 
 ## 技術メモ
 
@@ -104,7 +106,7 @@ opencode plugin opencode-models-usage-plugin --global
 ## パッケージ情報
 
 - npm: `opencode-models-usage-plugin`
-- 現在のバージョン: `0.1.0`
+- 現在のバージョン: `2.0.0`
 
 ## License
 

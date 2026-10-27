@@ -40,6 +40,75 @@ export interface SessionUsage {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null
 
+const readTokens = (value: unknown): TokenUsageLike | undefined => {
+  if (!isRecord(value)) return undefined
+
+  const cache = isRecord(value.cache) ? value.cache : undefined
+  return {
+    input: typeof value.input === "number" ? value.input : undefined,
+    output: typeof value.output === "number" ? value.output : undefined,
+    reasoning: typeof value.reasoning === "number" ? value.reasoning : undefined,
+    cache: cache
+      ? {
+          read: typeof cache.read === "number" ? cache.read : undefined,
+          write: typeof cache.write === "number" ? cache.write : undefined,
+        }
+      : undefined,
+  }
+}
+
+/**
+ * Normalize a V1 (`role` / `modelID` / `providerID`) or V2 session message
+ * (`type` / `model: { id, providerID }`) into the shape `getSessionUsage` reads.
+ *
+ * V2 compaction steps carry the cost and tokens that V1 stored on summary
+ * assistant messages, so a compaction with a model is counted as assistant usage.
+ */
+export const fromSessionMessage = (message: unknown): SessionMessageLike => {
+  if (!isRecord(message)) {
+    return { role: "unknown" }
+  }
+
+  const model = isRecord(message.model) ? message.model : undefined
+  const modelID =
+    typeof message.modelID === "string"
+      ? message.modelID
+      : typeof model?.id === "string"
+        ? model.id
+        : undefined
+  const providerID =
+    typeof message.providerID === "string"
+      ? message.providerID
+      : typeof model?.providerID === "string"
+        ? model.providerID
+        : undefined
+  const type = typeof message.type === "string" ? message.type : undefined
+  const role =
+    typeof message.role === "string"
+      ? message.role
+      : type === "compaction" && modelID
+        ? "assistant"
+        : (type ?? "unknown")
+  const time = isRecord(message.time) ? message.time : undefined
+
+  return {
+    id: typeof message.id === "string" ? message.id : undefined,
+    role,
+    modelID,
+    providerID,
+    tokens: readTokens(message.tokens),
+    cost: typeof message.cost === "number" ? message.cost : undefined,
+    summary: message.summary,
+    time: time
+      ? {
+          created: typeof time.created === "number" ? time.created : undefined,
+          completed: typeof time.completed === "number" ? time.completed : undefined,
+        }
+      : undefined,
+    finish: typeof message.finish === "string" ? message.finish : undefined,
+  }
+}
+
 const toNumber = (value: unknown): number =>
   typeof value === "number" && Number.isFinite(value) ? value : 0
 
