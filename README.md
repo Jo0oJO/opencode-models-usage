@@ -66,41 +66,43 @@ Whether you are heavily using model routing, complex agent orchestration, or sim
 
 ## Requirements
 
-- OpenCode `>= 1.4.3`
+- OpenCode `>= 2.0.0`
+
+This package targets the OpenCode V2 TUI plugin API (`@opencode/plugin`). It does not load under the V1 `tui.json` `plugin` / `plugin_enabled` config.
 
 ## Installation
 
-### Method 1: Manually update the global TUI config (recommended for first-time setup)
+This is a TUI-only package. Add it to the global CLI config so it stays active even when the terminal is connected to a remote server.
 
-Open or create the global config file:
+Open or create:
 
 ```text
-~/.config/opencode/tui.json
+~/.config/opencode/cli.json
 ```
 
-Add the following:
+When `$XDG_CONFIG_HOME` is set, use `$XDG_CONFIG_HOME/opencode/cli.json` instead.
 
 ```json
 {
-  "$schema": "https://opencode.ai/tui.json",
-  "plugin": [
-    "opencode-models-usage-plugin/tui"
-  ],
-  "plugin_enabled": {
-    "session-model-usage": true
-  }
+  "$schema": "https://opencode.ai/v2/cli.json",
+  "plugins": [
+    "opencode-models-usage-plugin"
+  ]
 }
 ```
 
-Save the file and restart OpenCode. The plugin will be installed automatically via npm.
+Save the file. OpenCode installs the npm package and loads its `./tui` entry (`Plugin.define`, id `session-model-usage`). Restart the terminal client if the sidebar panel does not show up on its own.
 
-### Method 2: One-click install via CLI
+To disable the panel without removing the package, prefix the plugin id in the same array:
 
-```bash
-opencode plugin opencode-models-usage-plugin --global
+```json
+{
+  "plugins": [
+    "opencode-models-usage-plugin",
+    "-session-model-usage"
+  ]
+}
 ```
-
-This command installs the plugin and updates your global config automatically.
 
 ## Technical Notes
 
@@ -113,7 +115,7 @@ This command installs the plugin and updates your global config automatically.
 ## Package Info
 
 - npm: `opencode-models-usage-plugin`
-- current version: `0.1.0`
+- current version: `2.0.0`
 
 ## License
 

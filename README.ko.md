@@ -57,41 +57,43 @@ OpenCode 사이드바에서 현재 세션 트리(재귀적인 하위 세션 포�
 
 ## 요구 사항
 
-- OpenCode `>= 1.4.3`
+- OpenCode `>= 2.0.0`
+
+이 패키지는 OpenCode V2 TUI 플러그인 API(`@opencode/plugin`)용입니다. V1 `tui.json` 의 `plugin` / `plugin_enabled` 로는 로드되지 않습니다.
 
 ## 설치 방법
 
-### 방법 1: 전역 TUI 설정 파일을 수동으로 수정하기 (처음엔 이 방법 추천)
+TUI 전용 패키지입니다. 전역 CLI 설정에 넣으면 터미널이 원격 서버에 붙어 있어도 사이드바가 그대로 동작합니다.
 
-다음 전역 설정 파일을 열거나 새로 만드세요.
+다음 파일을 열거나 새로 만드세요.
 
 ```text
-~/.config/opencode/tui.json
+~/.config/opencode/cli.json
 ```
 
-아래 내용을 추가하세요.
+`$XDG_CONFIG_HOME` 이 설정되어 있으면 `$XDG_CONFIG_HOME/opencode/cli.json` 을 사용합니다.
 
 ```json
 {
-  "$schema": "https://opencode.ai/tui.json",
-  "plugin": [
-    "opencode-models-usage-plugin/tui"
-  ],
-  "plugin_enabled": {
-    "session-model-usage": true
-  }
+  "$schema": "https://opencode.ai/v2/cli.json",
+  "plugins": [
+    "opencode-models-usage-plugin"
+  ]
 }
 ```
 
-저장한 뒤 OpenCode 를 재시작하면 npm 을 통해 자동으로 설치됩니다.
+저장하면 OpenCode 가 npm 에서 패키지를 설치하고 `./tui` 엔트리(`Plugin.define`, id 는 `session-model-usage`)를 불러옵니다. 사이드바가 바로 보이지 않으면 터미널 클라이언트를 다시 시작하세요.
 
-### 방법 2: CLI 한 줄로 설치하기
+패키지는 두고 패널만 끄려면 같은 배열에 플러그인 id 를 `-` 접두사로 추가합니다.
 
-```bash
-opencode plugin opencode-models-usage-plugin --global
+```json
+{
+  "plugins": [
+    "opencode-models-usage-plugin",
+    "-session-model-usage"
+  ]
+}
 ```
-
-이 명령은 플러그인을 설치하고 전역 설정도 자동으로 갱신합니다.
 
 ## 기술 메모
 
@@ -104,7 +106,7 @@ opencode plugin opencode-models-usage-plugin --global
 ## 패키지 정보
 
 - npm: `opencode-models-usage-plugin`
-- 현재 버전: `0.1.0`
+- 현재 버전: `2.0.0`
 
 ## License
 
